@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ─── Web3Work Gold/Dark Theme ─── */
+    --background: 220 15% 6%;
+    --foreground: 45 15% 92%;
+
+    --card: 220 14% 10%;
+    --card-foreground: 45 15% 92%;
+
+    --popover: 220 14% 8%;
+    --popover-foreground: 45 15% 92%;
+
+    /* Gold accent — Binance #F0B90B */
+    --primary: 43 88% 49%;
+    --primary-foreground: 220 15% 6%;
+
+    --secondary: 220 14% 16%;
+    --secondary-foreground: 45 15% 80%;
+
+    --muted: 220 14% 14%;
+    --muted-foreground: 220 10% 55%;
+
+    --accent: 43 88% 49%;
+    --accent-foreground: 220 15% 6%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 14% 18%;
+    --input: 220 14% 14%;
+    --ring: 43 88% 49%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens */
+    --gold: 43 88% 49%;
+    --gold-dim: 43 60% 35%;
+    --success: 142 72% 42%;
+    --warning: 38 95% 52%;
+    --info: 214 80% 56%;
+  }
+
+  .dark {
+    --background: 220 15% 6%;
+    --foreground: 45 15% 92%;
+    --card: 220 14% 10%;
+    --card-foreground: 45 15% 92%;
+    --popover: 220 14% 8%;
+    --popover-foreground: 45 15% 92%;
+    --primary: 43 88% 49%;
+    --primary-foreground: 220 15% 6%;
+    --secondary: 220 14% 16%;
+    --secondary-foreground: 45 15% 80%;
+    --muted: 220 14% 14%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 43 88% 49%;
+    --accent-foreground: 220 15% 6%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 14% 18%;
+    --input: 220 14% 14%;
+    --ring: 43 88% 49%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 { @apply font-semibold tracking-tight; }
+  a { @apply transition-colors duration-200; }
+}
+
+@layer components {
+  .gold-gradient {
+    background: linear-gradient(135deg, hsl(43, 88%, 49%) 0%, hsl(38, 95%, 52%) 100%);
+  }
+  .dark-card {
+    @apply bg-card border border-border rounded-xl;
+  }
+  .gold-text {
+    @apply text-primary;
+  }
+  .glow-gold {
+    box-shadow: 0 0 20px hsl(43 88% 49% / 0.3);
+  }
+  .hero-grid {
+    background-image: 
+      linear-gradient(hsl(220 14% 18% / 0.4) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(220 14% 18% / 0.4) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .stat-card {
+    @apply dark-card p-6 hover:border-primary/40 transition-all duration-300 hover:glow-gold;
+  }
+  .nav-link {
+    @apply text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-secondary text-sm font-medium;
+  }
+  .nav-link-active {
+    @apply text-primary bg-primary/10;
+  }
+  .badge-tier-free { @apply bg-secondary text-secondary-foreground; }
+  .badge-tier-basic { @apply bg-info/20 text-blue-400 border border-info/30; }
+  .badge-tier-premium { @apply bg-primary/20 text-primary border border-primary/30; }
+  .badge-tier-enterprise { @apply bg-purple-500/20 text-purple-300 border border-purple-500/30; }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: hsl(var(--muted)); }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+
+/* Loading skeleton */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--secondary)) 50%, hsl(var(--muted)) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
