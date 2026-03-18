@@ -1,15 +1,16 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm } from "fs/promises";
+import { rm, readFile } from "fs/promises";
 
-// Only exclude Node.js built-ins — bundle ALL npm packages into dist/index.cjs
-const nodeBuiltins = [
-  "assert", "buffer", "child_process", "cluster", "console", "constants",
-  "crypto", "dgram", "dns", "domain", "events", "fs", "http", "http2",
-  "https", "module", "net", "os", "path", "perf_hooks", "process",
-  "punycode", "querystring", "readline", "repl", "stream", "string_decoder",
-  "sys", "timers", "tls", "trace_events", "tty", "url", "util",
-  "v8", "vm", "worker_threads", "zlib",
+// Bundle most deps for faster cold starts, keep some external
+const allowlist = [
+  "cors", "date-fns", "drizzle-orm", "drizzle-zod",
+  "express", "express-rate-limit", "express-session",
+  "jsonwebtoken", "memorystore", "nodemailer",
+  "passport", "passport-local", "pg", "uuid",
+  "ws", "zod", "zod-validation-error",
+  "@supabase/supabase-js", "ethers", "bcryptjs",
+  "helmet", "@lemonsqueezy/lemonsqueezy.js",
 ];
 
 async function buildAll() {
@@ -18,20 +19,23 @@ async function buildAll() {
   console.log("building client...");
   await viteBuild();
 
-  console.log("building server for Vercel (no listen)...");
+  console.log("building server...");
+  const pkg = JSON.parse(await readFile("package.json", "utf-8"));
+  const allDeps = [
+    ...Object.keys(pkg.dependencies || {}),
+    ...Object.keys(pkg.devDependencies || {}),
+  ];
+  const externals = allDeps.filter((dep) => !allowlist.includes(dep));
+
   await esbuild({
     entryPoints: ["server/index.ts"],
     platform: "node",
     bundle: true,
     format: "cjs",
     outfile: "dist/index.cjs",
-    define: {
-      "process.env.NODE_ENV": '"production"',
-      // Tell the server NOT to call httpServer.listen()
-      "__IS_VERCEL__": "true",
-    },
+    define: { "process.env.NODE_ENV": '"production"' },
     minify: true,
-    external: nodeBuiltins,
+    external: externals,
     logLevel: "info",
   });
 }

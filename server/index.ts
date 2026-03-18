@@ -3,14 +3,6 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
-// Prevent Vercel serverless crashes from unhandled rejections
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('[unhandledRejection]', reason);
-});
-process.on('uncaughtException', (err) => {
-  console.error('[uncaughtException]', err.message);
-});
-
 const app = express();
 const httpServer = createServer(app);
 
@@ -65,8 +57,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Register all routes and middleware
-export const appReady: Promise<typeof app> = (async () => {
+(async () => {
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
@@ -78,21 +69,9 @@ export const appReady: Promise<typeof app> = (async () => {
   });
 
   serveStatic(app);
-  return app;
-})();
 
-export { app };
-
-// __IS_VERCEL__ is replaced at build time by esbuild define
-// When building for Vercel: true (no listen)
-// When building for standalone: false (listen on port)
-declare const __IS_VERCEL__: boolean;
-
-if (!__IS_VERCEL__) {
-  appReady.then(() => {
-    const port = parseInt(process.env.PORT || "5000", 10);
-    httpServer.listen({ port, host: "0.0.0.0", reusePort: true }, () => {
-      log(`serving on port ${port}`);
-    });
+  const port = parseInt(process.env.PORT || "5000", 10);
+  httpServer.listen({ port, host: "0.0.0.0", reusePort: true }, () => {
+    log(`serving on port ${port}`);
   });
-}
+})();
