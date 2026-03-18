@@ -2,13 +2,12 @@
   "version": 2,
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "outputDirectory": "dist/public",
   "builds": [
     {
       "src": "api/index.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["dist/**", "node_modules/**"]
+        "includeFiles": ["dist/**"]
       }
     }
   ],
