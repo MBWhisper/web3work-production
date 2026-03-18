@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "echo 'Using pre-built files'",
+  "installCommand": "echo 'No install needed'",
   "builds": [
     {
       "src": "api/index.js",
