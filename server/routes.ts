@@ -579,3 +579,14 @@ export function registerRoutes(httpServer: Server, app: Express) {
     res.json({ status: "ok", timestamp: new Date().toISOString(), version: "2.0.0" });
   });
 }
+
+  // Temporary debug endpoint - remove after Railway fix confirmed
+  app.get("/api/debug/env-check", requireAdmin, (req, res) => {
+    res.json({
+      LS_STORE_ID: process.env.LS_STORE_ID,
+      LS_VARIANT_BASIC: process.env.LS_VARIANT_BASIC,
+      LEMONSQUEEZY_API_KEY_LENGTH: process.env.LEMONSQUEEZY_API_KEY?.length || 0,
+      NODE_ENV: process.env.NODE_ENV,
+      APP_URL: process.env.APP_URL,
+    });
+  });
