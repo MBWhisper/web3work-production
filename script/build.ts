@@ -2,9 +2,7 @@ import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
 import { rm } from "fs/promises";
 
-// Bundle EVERYTHING into dist/index.cjs — no external node_modules
-// This keeps Vercel serverless function under 250MB limit
-// Only exclude Node.js built-ins (they're always available)
+// Only exclude Node.js built-ins — bundle ALL npm packages into dist/index.cjs
 const nodeBuiltins = [
   "assert", "buffer", "child_process", "cluster", "console", "constants",
   "crypto", "dgram", "dns", "domain", "events", "fs", "http", "http2",
@@ -20,7 +18,7 @@ async function buildAll() {
   console.log("building client...");
   await viteBuild();
 
-  console.log("building server (fully bundled for Vercel)...");
+  console.log("building server for Vercel (no listen)...");
   await esbuild({
     entryPoints: ["server/index.ts"],
     platform: "node",
@@ -29,9 +27,10 @@ async function buildAll() {
     outfile: "dist/index.cjs",
     define: {
       "process.env.NODE_ENV": '"production"',
+      // Tell the server NOT to call httpServer.listen()
+      "__IS_VERCEL__": "true",
     },
     minify: true,
-    // Only mark Node built-ins as external — bundle ALL npm packages
     external: nodeBuiltins,
     logLevel: "info",
   });

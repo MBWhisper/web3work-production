@@ -57,7 +57,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// appReady: resolves to configured Express app (used by Vercel serverless)
+// Register all routes and middleware
 export const appReady: Promise<typeof app> = (async () => {
   await registerRoutes(httpServer, app);
 
@@ -70,17 +70,17 @@ export const appReady: Promise<typeof app> = (async () => {
   });
 
   serveStatic(app);
-
   return app;
 })();
 
 export { app };
 
-// Only listen when running as a standalone server (not Vercel serverless)
-// Detect Vercel by checking for VERCEL env var OR by checking if we're being require()'d
-const isVercel = typeof process.env.VERCEL !== "undefined" || process.env.NODE_ENV_RUNTIME === "vercel";
+// __IS_VERCEL__ is replaced at build time by esbuild define
+// When building for Vercel: true (no listen)
+// When building for standalone: false (listen on port)
+declare const __IS_VERCEL__: boolean;
 
-if (!isVercel && require.main === module) {
+if (!__IS_VERCEL__) {
   appReady.then(() => {
     const port = parseInt(process.env.PORT || "5000", 10);
     httpServer.listen({ port, host: "0.0.0.0", reusePort: true }, () => {
