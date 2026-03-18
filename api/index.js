@@ -1,37 +1,51 @@
 // Vercel Serverless Function
-// Built files exist in dist/ after `npm run build` runs
+process.env.NODE_ENV = 'production';
 
 let app = null;
-let initError = null;
+let appError = null;
+let initialized = false;
 
-// Initialize synchronously — Vercel waits for module load
-try {
-  const server = require('../dist/index.cjs');
-  app = server.app || server.default || server;
-  if (typeof app !== 'function') {
-    initError = new Error(`Invalid app export. Type: ${typeof app}. Keys: ${Object.keys(server).join(',')}`);
-    app = null;
-  }
-} catch (e) {
-  initError = e;
-}
-
-// Vercel calls this as the request handler
-module.exports = async (req, res) => {
-  if (initError) {
-    console.error('Init error:', initError.message);
-    return res.status(500).json({ error: initError.message });
-  }
-
-  // Wait for async route registration
+async function initialize() {
+  if (initialized) return;
+  initialized = true;
+  
   try {
     const server = require('../dist/index.cjs');
+    
+    // Wait for async initialization (route registration)
     if (server.appReady) {
       await server.appReady;
     }
-    return app(req, res);
+    
+    const candidate = server.app || server.default || server;
+    if (typeof candidate !== 'function') {
+      throw new Error(`app is not a function. typeof=${typeof candidate}. keys=${Object.keys(server).join(',')}`);
+    }
+    app = candidate;
   } catch (e) {
-    console.error('Handler error:', e.message);
-    return res.status(500).json({ error: e.message });
+    appError = e;
+    console.error('[api/index.js] Initialization failed:', e.message);
+    console.error(e.stack);
   }
+}
+
+// Start initializing immediately
+const initPromise = initialize();
+
+module.exports = async (req, res) => {
+  await initPromise;
+  
+  if (appError) {
+    return res.status(500).json({ 
+      error: 'Server init failed', 
+      message: appError.message,
+      hint: 'Check Vercel function logs for details'
+    });
+  }
+  
+  if (!app) {
+    return res.status(500).json({ error: 'App not ready' });
+  }
+
+  return app(req, res);
 };
