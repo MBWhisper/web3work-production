@@ -29,7 +29,6 @@ export function log(message: string, source = "express") {
     second: "2-digit",
     hour12: true,
   });
-
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
@@ -51,7 +50,6 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-
       log(logLine);
     }
   });
@@ -59,49 +57,34 @@ app.use((req, res, next) => {
   next();
 });
 
-// Export a promise that resolves to the configured app (for Vercel serverless)
-export const appReady = (async () => {
+// appReady: resolves to configured Express app (used by Vercel serverless)
+export const appReady: Promise<typeof app> = (async () => {
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     console.error("Internal Server Error:", err);
-
-    if (res.headersSent) {
-      return next(err);
-    }
-
+    if (res.headersSent) return next(err);
     return res.status(status).json({ message });
   });
 
-  if (process.env.NODE_ENV === "production") {
-    serveStatic(app);
-  } else {
-    const { setupVite } = await import("./vite");
-    await setupVite(httpServer, app);
-  }
+  serveStatic(app);
 
   return app;
 })();
 
-// Export app for Vercel serverless handler
 export { app };
 
-// Start server when not in Vercel (i.e., when running directly)
-if (!process.env.VERCEL) {
+// Only listen when running as a standalone server (not Vercel serverless)
+// Detect Vercel by checking for VERCEL env var OR by checking if we're being require()'d
+const isVercel = typeof process.env.VERCEL !== "undefined" || process.env.NODE_ENV_RUNTIME === "vercel";
+
+if (!isVercel && require.main === module) {
   appReady.then(() => {
     const port = parseInt(process.env.PORT || "5000", 10);
-    httpServer.listen(
-      {
-        port,
-        host: "0.0.0.0",
-        reusePort: true,
-      },
-      () => {
-        log(`serving on port ${port}`);
-      },
-    );
+    httpServer.listen({ port, host: "0.0.0.0", reusePort: true }, () => {
+      log(`serving on port ${port}`);
+    });
   });
 }
