@@ -1,51 +1,45 @@
 // Vercel Serverless Function
-process.env.NODE_ENV = 'production';
+'use strict';
 
+// Capture any initialization errors
 let app = null;
-let appError = null;
-let initialized = false;
+let initError = null;
 
-async function initialize() {
-  if (initialized) return;
-  initialized = true;
+try {
+  const server = require('../dist/index.cjs');
+  app = server.app || server.default || server;
   
-  try {
-    const server = require('../dist/index.cjs');
-    
-    // Wait for async initialization (route registration)
-    if (server.appReady) {
-      await server.appReady;
-    }
-    
-    const candidate = server.app || server.default || server;
-    if (typeof candidate !== 'function') {
-      throw new Error(`app is not a function. typeof=${typeof candidate}. keys=${Object.keys(server).join(',')}`);
-    }
-    app = candidate;
-  } catch (e) {
-    appError = e;
-    console.error('[api/index.js] Initialization failed:', e.message);
-    console.error(e.stack);
+  if (typeof app !== 'function') {
+    initError = new Error(`app export is not callable. typeof=${typeof app}`);
+    app = null;
   }
+} catch (e) {
+  initError = e;
+  console.error('[INIT ERROR]', e.message);
 }
 
-// Start initializing immediately
-const initPromise = initialize();
-
-module.exports = async (req, res) => {
-  await initPromise;
-  
-  if (appError) {
-    return res.status(500).json({ 
-      error: 'Server init failed', 
-      message: appError.message,
-      hint: 'Check Vercel function logs for details'
-    });
-  }
-  
-  if (!app) {
-    return res.status(500).json({ error: 'App not ready' });
+module.exports = async function handler(req, res) {
+  // If sync init failed, return JSON error
+  if (initError) {
+    res.setHeader('Content-Type', 'application/json');
+    res.statusCode = 500;
+    return res.end(JSON.stringify({
+      error: 'init_failed',
+      message: initError.message,
+    }));
   }
 
-  return app(req, res);
+  try {
+    // Wait for async route registration
+    const server = require('../dist/index.cjs');
+    if (server.appReady && typeof server.appReady.then === 'function') {
+      await server.appReady;
+    }
+    return app(req, res);
+  } catch (e) {
+    console.error('[HANDLER ERROR]', e.message);
+    res.setHeader('Content-Type', 'application/json');
+    res.statusCode = 500;
+    return res.end(JSON.stringify({ error: 'handler_failed', message: e.message }));
+  }
 };
