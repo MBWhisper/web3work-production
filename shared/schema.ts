@@ -249,7 +249,7 @@ export const SUBSCRIPTION_PLANS = {
     proposalsPerMonth: 20,
     jobPostsPerMonth: 3,
     features: ["20 proposals/month", "3 job posts/month", "Featured listing (1)", "Priority support"],
-    lsVariantId: process.env.LS_VARIANT_BASIC,
+    lsVariantId: process.env.LS_VARIANT_BASIC || "1412734",
   },
   premium: {
     name: "Premium",
@@ -258,7 +258,7 @@ export const SUBSCRIPTION_PLANS = {
     proposalsPerMonth: -1,
     jobPostsPerMonth: 10,
     features: ["Unlimited proposals", "10 job posts/month", "Featured profile", "Advanced analytics", "Priority support"],
-    lsVariantId: process.env.LS_VARIANT_PREMIUM,
+    lsVariantId: process.env.LS_VARIANT_PREMIUM || "1412692",
   },
   enterprise: {
     name: "Enterprise",
@@ -267,7 +267,7 @@ export const SUBSCRIPTION_PLANS = {
     proposalsPerMonth: -1,
     jobPostsPerMonth: -1,
     features: ["Unlimited everything", "Dedicated account manager", "Custom branding", "API access", "SLA support"],
-    lsVariantId: process.env.LS_VARIANT_ENTERPRISE,
+    lsVariantId: process.env.LS_VARIANT_ENTERPRISE || "1412728",
   },
 } as const;
 

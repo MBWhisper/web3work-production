@@ -15,7 +15,9 @@ export async function createLSCheckout(opts: {
   redirectUrl: string;
   metadata?: Record<string, string>;
 }) {
-  const storeId = process.env.LS_STORE_ID!;
+  // Use numeric store ID (Railway env var may be UUID — fallback to known numeric ID)
+  const rawStoreId = process.env.LS_STORE_ID ?? "";
+  const storeId = rawStoreId.includes("-") ? "318272" : rawStoreId || "318272";
   const result = await createCheckout(storeId, opts.variantId, {
     checkoutData: {
       email: opts.email,
