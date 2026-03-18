@@ -3,6 +3,14 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
+// Prevent Vercel serverless crashes from unhandled rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[unhandledRejection]', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err.message);
+});
+
 const app = express();
 const httpServer = createServer(app);
 
