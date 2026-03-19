@@ -13,6 +13,8 @@ import Pricing from "@/pages/Pricing";
 import Dashboard from "@/pages/Dashboard";
 import Admin from "@/pages/Admin";
 import Checkout from "@/pages/Checkout";
+import Blog from "@/pages/Blog";
+import BlogPost from "@/pages/BlogPost";
 
 function AppContent() {
   return (
@@ -36,6 +38,8 @@ function AppContent() {
               <Route path="/dashboard/:tab" component={Dashboard} />
               <Route path="/admin" component={Admin} />
               <Route path="/checkout/subscription" component={Checkout} />
+              <Route path="/blog" component={Blog} />
+              <Route path="/blog/:slug" component={BlogPost} />
               {/* Default: show landing page (handles validator loading at root) */}
               <Route component={Landing} />
             </Switch>
