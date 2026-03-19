@@ -361,7 +361,7 @@ export function registerRoutes(httpServer: Server, app: Express) {
         userId,
         email: user!.email,
         variantId,
-        redirectUrl: `${process.env.APP_URL}/dashboard/jobs?payment=success`,
+        redirectUrl: `${process.env.APP_URL || "https://web3work.up.railway.app"}/dashboard/jobs?payment=success`,
         metadata: { job_id: jobId, job_title: req.body.jobTitle ?? "" },
       });
 
@@ -395,7 +395,7 @@ export function registerRoutes(httpServer: Server, app: Express) {
         userId,
         email: user!.email,
         variantId: plan.lsVariantId,
-        redirectUrl: `${process.env.APP_URL}/dashboard?subscription=success`,
+        redirectUrl: `${process.env.APP_URL || "https://web3work.up.railway.app"}/dashboard?subscription=success`,
         metadata: { tier },
       });
       res.json({ checkoutUrl: checkout?.attributes?.url });
@@ -586,7 +586,7 @@ export function registerRoutes(httpServer: Server, app: Express) {
       LS_VARIANT_BASIC: process.env.LS_VARIANT_BASIC,
       LEMONSQUEEZY_API_KEY_LENGTH: process.env.LEMONSQUEEZY_API_KEY?.length || 0,
       NODE_ENV: process.env.NODE_ENV,
-      APP_URL: process.env.APP_URL,
+      APP_URL: process.env.APP_URL || "NOT SET (using fallback)",
     });
   });
 }
