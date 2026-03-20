@@ -76,6 +76,13 @@ export function registerRoutes(httpServer: Server, app: Express) {
 
       await sendVerificationEmail(user.email, verifyToken);
 
+      // Notify admin via n8n webhook
+      fetch(`${process.env.APP_URL || "https://web3work.up.railway.app"}/api/notify/new-signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, username: data.displayName || user.email, plan: "Free" }),
+      }).catch(() => {});
+
       const token = signToken({ userId: user.id, email: user.email, role: user.role });
       const profile = await storage.getProfileByUserId(user.id);
       const subscription = await storage.getSubscriptionByUser(user.id);
