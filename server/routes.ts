@@ -585,22 +585,9 @@ export function registerRoutes(httpServer: Server, app: Express) {
   app.post("/api/notify/new-signup", async (req, res) => {
     try {
       const { email, username, plan } = req.body;
-      const nodemailer = await import("nodemailer");
-      const transporter = nodemailer.default.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false,
-        auth: {
-          user: process.env.SMTP_USER || "electronicmbtech@gmail.com",
-          pass: process.env.SMTP_PASS || "",
-        },
-      });
       const date = new Date().toLocaleString("en-GB", { timeZone: "Africa/Casablanca" });
-      await transporter.sendMail({
-        from: `"Web3Work" <${process.env.SMTP_USER || "electronicmbtech@gmail.com"}>`,
-        to: process.env.ADMIN_EMAIL || "electronicmbtech@gmail.com",
-        subject: `New Member: ${username || email} joined Web3Work!`,
-        html: `<div style="font-family:sans-serif;background:#0a0a0a;color:#f1f5f9;padding:30px;">
+      const RESEND_KEY = process.env.RESEND_API_KEY || "";
+      const html = `<div style="font-family:sans-serif;background:#0a0a0a;color:#f1f5f9;padding:30px;">
           <div style="max-width:480px;margin:0 auto;">
             <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:20px;border-radius:12px;text-align:center;">
               <h2 style="margin:0;color:white;">New Member on Web3Work!</h2>
@@ -615,9 +602,23 @@ export function registerRoutes(httpServer: Server, app: Express) {
               <a href="https://web3work.up.railway.app" style="background:#6366f1;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Open Dashboard</a>
             </div>
           </div>
-        </div>`,
+        </div>`;
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${RESEND_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "Web3Work <onboarding@resend.dev>",
+          to: [process.env.ADMIN_EMAIL || "electronicmbtech@gmail.com"],
+          subject: `New Member: ${username || email} joined Web3Work!`,
+          html,
+        }),
       });
-      res.json({ success: true, message: "Email sent" });
+      const result = await response.json() as any;
+      if (!response.ok) throw new Error(result.message || "Resend error");
+      res.json({ success: true, id: result.id });
     } catch (err: any) {
       console.error("notify error:", err.message);
       res.status(500).json({ success: false, error: err.message });
