@@ -579,6 +579,51 @@ export function registerRoutes(httpServer: Server, app: Express) {
     res.json({ status: "ok", timestamp: new Date().toISOString(), version: "2.0.0" });
   });
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // N8N NOTIFY ENDPOINT — sends email alert when called from n8n webhook
+  // ═══════════════════════════════════════════════════════════════════════════
+  app.post("/api/notify/new-signup", async (req, res) => {
+    try {
+      const { email, username, plan } = req.body;
+      const nodemailer = await import("nodemailer");
+      const transporter = nodemailer.default.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER || "electronicmbtech@gmail.com",
+          pass: process.env.SMTP_PASS || "",
+        },
+      });
+      const date = new Date().toLocaleString("en-GB", { timeZone: "Africa/Casablanca" });
+      await transporter.sendMail({
+        from: `"Web3Work" <${process.env.SMTP_USER || "electronicmbtech@gmail.com"}>`,
+        to: process.env.ADMIN_EMAIL || "electronicmbtech@gmail.com",
+        subject: `New Member: ${username || email} joined Web3Work!`,
+        html: `<div style="font-family:sans-serif;background:#0a0a0a;color:#f1f5f9;padding:30px;">
+          <div style="max-width:480px;margin:0 auto;">
+            <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:20px;border-radius:12px;text-align:center;">
+              <h2 style="margin:0;color:white;">New Member on Web3Work!</h2>
+            </div>
+            <div style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:20px;margin-top:16px;">
+              <p><b style="color:#818cf8;">Email:</b> ${email || "N/A"}</p>
+              <p><b style="color:#818cf8;">Username:</b> ${username || "N/A"}</p>
+              <p><b style="color:#818cf8;">Plan:</b> ${plan || "Free"}</p>
+              <p><b style="color:#818cf8;">Date:</b> ${date}</p>
+            </div>
+            <div style="text-align:center;margin-top:20px;">
+              <a href="https://web3work.up.railway.app" style="background:#6366f1;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Open Dashboard</a>
+            </div>
+          </div>
+        </div>`,
+      });
+      res.json({ success: true, message: "Email sent" });
+    } catch (err: any) {
+      console.error("notify error:", err.message);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // Debug endpoint to verify Railway env vars
   app.get("/api/debug/env-check", requireAdmin, (req, res) => {
     res.json({
